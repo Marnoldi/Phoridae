@@ -3,18 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>벼룩파리 (Phoridae)</title>
+    <title>추상전략게임 - Phoridae</title>
     <style>
-        :root {
-            --bg-color: #222272;
-            --dark-square: #5b8c5a;
-            --light-square: #e7e7cd;
-            --navy-piece: #2d3748;
-            --blue-piece: #2b6cb0;
-        }
-
+        /* 외부 배경 색상 설정 */
         body {
-            background-color: var(--bg-color);
+            background-color: #222272;
             color: #ffffff;
             font-family: 'Malgun Gothic', sans-serif;
             display: flex;
@@ -23,384 +16,239 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            padding: 10px;
-            box-sizing: border-box;
+            padding: 20px;
         }
 
-        h1 { margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; }
-        
-        .main-container {
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* 게임 보드 컨테이너 및 좌표 레이아웃 */
+        .game-container {
+            display: grid;
+            grid-template-columns: 30px 360px;
+            grid-template-rows: 360px 30px;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        /* 세로 좌표 (a-f) */
+        .rank-labels {
             display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            align-items: flex-start;
-            margin-top: 15px;
-            width: 100%;
-            max-width: 700px;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            font-weight: bold;
+            font-size: 16px;
         }
 
-        .status-panel {
-            margin-bottom: 15px; font-size: 1.1rem; font-weight: bold;
-            background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 8px;
-            text-align: center; box-sizing: border-box;
+        /* 가로 좌표 (1-6) */
+        .file-labels {
+            grid-column: 2;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 5px;
         }
 
+        /* 6x6 체스판 */
         .board {
             display: grid;
-            grid-template-columns: repeat(4, 75px);
-            grid-template-rows: repeat(6, 75px);
-            border: 4px solid #ffffff;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-            border-radius: 4px;
-            flex-shrink: 0;
+            grid-template-columns: repeat(6, 60px);
+            grid-template-rows: repeat(6, 60px);
+            border: 2px solid #ffffff;
         }
 
+        /* 체스판 칸 색상 정의 */
         .square {
-            width: 75px; height: 75px;
-            display: flex; align-items: center; justify-content: center;
-            position: relative; cursor: pointer; user-select: none;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
         }
 
-        .square.light { background-color: var(--light-square); }
-        .square.dark { background-color: var(--dark-square); }
-
-        .square.selected { outline: 3px solid #ffeb3b; outline-offset: -3px; z-index: 10; }
-        .square.movable::after {
-            content: ""; width: 20px; height: 20px; background-color: rgba(0, 255, 0, 0.5);
-            border-radius: 50%; position: absolute; z-index: 5;
+        /* 흰 칸: 연한 청색 */
+        .light {
+            background-color: #add8e6; 
         }
-        .square.attackable { outline: 3px solid #f44336; outline-offset: -3px; z-index: 10; }
 
+        /* 검은 칸: 남색 */
+        .dark {
+            background-color: #000080;
+        }
+
+        /* 기물 스타일 (예시 텍스트 및 유니코드 아이콘) */
         .piece {
-            width: 58px; height: 58px; border-radius: 50%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 1rem; color: #ffffff;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4); border: 2px solid #ffffff;
-            position: relative; z-index: 6;
-        }
-
-        .piece.team-blue { background-color: var(--blue-piece); }
-        .piece.team-navy { background-color: var(--navy-piece); }
-        .piece.male::after { content: "⚜"; font-size: 0.7rem; position: absolute; bottom: 1px; color: #ffd700; }
-        .piece.pregnant { border-color: #ff007f !important; box-shadow: 0 0 12px #ff007f; }
-
-        .notation-panel {
+            font-size: 32px;
+            user-select: none;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             width: 100%;
-            max-width: 240px; 
-            height: 454px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 3px solid #ffffff; border-radius: 6px;
-            padding: 12px; display: flex; flex-direction: column;
-            box-sizing: border-box;
+            height: 100%;
         }
-        .notation-title { font-size: 1rem; font-weight: bold; border-bottom: 2px solid #ffffff; padding-bottom: 5px; margin-bottom: 10px; text-align: center; }
-        .notation-log { flex: 1; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.5; }
 
-        .controls { margin-top: 15px; text-align: center; }
-        button {
-            padding: 10px 20px; font-size: 1rem; font-weight: bold;
-            background-color: #ffffff; color: var(--bg-color); border: none; border-radius: 5px; cursor: pointer;
+        /* 청 팀 기물 스타일 */
+        .team-blue {
+            color: #1e90ff;
+            filter: drop-shadow(0px 0px 3px #fff);
         }
-        button:hover { background-color: #e0e0e0; }
+
+        /* 람 팀 기물 스타일 */
+        .team-navy {
+            color: #1a1a1a;
+            filter: drop-shadow(0px 0px 3px #fff);
+        }
+
+        /* 수컷 기물의 문양 표식 예시 */
+        .male-mark::after {
+            content: '⚜';
+            position: absolute;
+            font-size: 12px;
+            bottom: 2px;
+            right: 2px;
+            color: gold;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            padding: 1px;
+        }
+
+        /* 하단 설명글 영역 */
+        .description-box {
+            margin-top: 30px;
+            max-width: 420px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #add8e6;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .description-box h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 5px;
+        }
+
+        .description-box ul {
+            padding-left: 20px;
+            margin: 10px 0 0 0;
+        }
     </style>
 </head>
 <body>
 
-    <h1>벼룩파리 (Phoridae)</h1>
-    
-    <div class="main-container">
-        <div>
-            <div class="status-panel" id="status">람(Navy)의 차례입니다 (성장기)</div>
-            <div class="board" id="board"></div>
+    <h1>Phoridae (포리대)</h1>
+
+    <div class="game-container">
+        <!-- 세로 좌표 (청의 입장 기준: 앞이 a, 뒤가 f) -->
+        <div class="rank-labels">
+            <div>f</div>
+            <div>e</div>
+            <div>d</div>
+            <div>c</div>
+            <div>b</div>
+            <div>a</div>
         </div>
-        
-        <div class="notation-panel">
-            <div class="notation-title">📜 경기 기보 기록</div>
-            <div class="notation-log" id="notation-log"></div>
+
+        <!-- 6x6 보드판 (f열부터 a열 순서로 배치) -->
+        <div class="board" id="board"></div>
+
+        <!-- 가로 좌표 (왼쪽부터 1 ~ 6) -->
+        <div class="file-labels">
+            <div>1</div>
+            <div>2</div>
+            <div>3</div>
+            <div>4</div>
+            <div>5</div>
+            <div>6</div>
         </div>
     </div>
 
-    <div class="controls">
-        <button id="pass-btn">4턴 주기 휴식(Pass)</button>
+    <!-- 하단 설명글 상자 (예시) -->
+    <div class="description-box">
+        <h2>게임 규칙 및 기물 안내 (예시)</h2>
+        <p><strong>Phoridae</strong>는 6x6 보드에서 진행되는 체스/장기 기반의 추상전략게임입니다.</p>
+        <ul>
+            <li><strong>람(Navy) 팀</strong>이 선공으로 시작합니다.</li>
+            <li>상대의 <strong>수컷(M)</strong>을 잡거나, 상대에게 수컷 외의 기물이 남지 않게 하면 승리합니다.</li>
+            <li>구더기(M), 번데기(P), 암컷(F), 수컷(M), 어린 수컷(Y) 등 고유의 성장 및 번식 규칙을 가집니다.</li>
+        </ul>
     </div>
 
     <script>
-        const boardState = Array(6).fill(null).map(() => Array(4).fill(null));
-        const rowLabels = ['a', 'b', 'c', 'd', 'e', 'f'];
+        // 초기 예시 배치도 (이미지 기준 세팅)
+        // 6x6 배열 (f1~f6이 index 0, a1~a6이 index 5)
+        const initialBoard = [
+            // f열 (청 팀 진영)
+            [{type: 'F', team: 'blue'}, {type: 'F', team: 'blue', special: true}, {type: 'M', team: 'blue'}, {type: 'F', team: 'blue'}], 
+            // e열
+            [{type: 'M', team: 'blue'}, null, null, {type: 'M', team: 'blue'}],
+            // d열
+            [null, null, null, null],
+            // c열
+            [null, null, null, null],
+            // b열
+            [{type: 'M', team: 'navy'}, null, null, {type: 'M', team: 'navy'}],
+            // a열 (람 팀 진영)
+            [{type: 'F', team: 'navy'}, {type: 'F', team: 'navy'}, {type: 'F', team: 'navy', special: true}, {type: 'F', team: 'navy'}]
+        ];
 
-        function createPiece(type, team, isMale = false) {
-            let dir = (team === 'blue') ? 1 : -1;
-            return { type, team, isMale, dir, ageTurns: 0, closeToMaleTurns: 0, isPregnant: false };
-        }
+        const boardElement = document.getElementById('board');
+        const ranks = ['f', 'e', 'd', 'c', 'b', 'a'];
 
-        boardState[0][0] = createPiece('P', 'blue');
-        boardState[0][1] = createPiece('M', 'blue', true);
-        boardState[0][2] = createPiece('F', 'blue');
-        boardState[0][3] = createPiece('P', 'blue');
-        boardState[1][0] = createPiece('m', 'blue');
-        boardState[1][3] = createPiece('m', 'blue');
-
-        boardState[4][0] = createPiece('m', 'navy');
-        boardState[4][3] = createPiece('m', 'navy');
-        boardState[5][0] = createPiece('P', 'navy');
-        boardState[5][1] = createPiece('F', 'navy');
-        boardState[5][2] = createPiece('M', 'navy', true);
-        boardState[5][3] = createPiece('P', 'navy');
-
-        let currentTurn = 'navy';
-        let selectedSquare = null;
-        let validMoves = [];
-        let fullTurnCount = 1;
-
-        const boardEl = document.getElementById('board');
-        const statusEl = document.getElementById('status');
-        const logEl = document.getElementById('notation-log');
-
-        function inBounds(r, c) { return r >= 0 && r < 6 && c >= 0 && c < 4; }
-        function isEdge(r, c) { return r === 0 || r === 5 || c === 0 || c === 3; }
-
-        function getValidMoves(r, c) {
-            const piece = boardState[r][c];
-            if (!piece) return [];
-            const moves = [];
-
-            if (piece.type === 'm') {
-                let nextR = r + piece.dir;
-                if (inBounds(nextR, c)) {
-                    const target = boardState[nextR][c];
-                    if (!target || target.team !== piece.team) moves.push({r: nextR, c: c});
-                }
-            }
-            else if (piece.type === 'P') {
-                const pMoves = [[1,1], [1,-1], [-1,1], [-1,-1]];
-                pMoves.forEach(([dr, dc]) => {
-                    let nr = r + dr, nc = c + dc;
-                    if (inBounds(nr, nc)) {
-                        const target = boardState[nr][nc];
-                        if (!target || target.team !== piece.team) moves.push({r: nr, c: nc});
-                    }
-                });
-            }
-            else if (piece.type === 'F') {
-                const diagDirs = [[1,1], [1,-1], [-1,1], [-1,-1]];
-                diagDirs.forEach(([dr, dc]) => {
-                    for (let step = 1; step <= 2; step++) {
-                        let nr = r + dr * step, nc = c + dc * step;
-                        if (!inBounds(nr, nc)) break;
-                        const target = boardState[nr][nc];
-                        if (!target) moves.push({r: nr, c: nc});
-                        else {
-                            if (target.team !== piece.team) moves.push({r: nr, c: nc});
-                            break;
-                        }
-                    }
-                });
-                if (isEdge(r, c)) {
-                    [[1,0], [-1,0], [0,1], [0,-1]].forEach(([dr, dc]) => {
-                        let nr = r + dr, nc = c + dc;
-                        if (inBounds(nr, nc)) {
-                            const target = boardState[nr][nc];
-                            if (!target || target.team !== piece.team) moves.push({r: nr, c: nc});
-                        }
-                    });
-                }
-            }
-            else if (piece.type === 'M') {
-                const diagDirs = [[1,1], [1,-1], [-1,1], [-1,-1]];
-                diagDirs.forEach(([dr, dc]) => {
-                    let nr = r + dr, nc = c + dc;
-                    while (inBounds(nr, nc)) {
-                        const target = boardState[nr][nc];
-                        if (!target) moves.push({r: nr, c: nc});
-                        else {
-                            if (target.team !== piece.team) moves.push({r: nr, c: nc});
-                            break;
-                        }
-                        nr += dr; nc += dc;
-                    }
-                });
-                if (isEdge(r, c)) {
-                    [[1,0], [-1,0], [0,1], [0,-1]].forEach(([dr, dc]) => {
-                        let nr = r + dr, nc = c + dc;
-                        if (inBounds(nr, nc)) {
-                            const target = boardState[nr][nc];
-                            if (!target || target.team !== piece.team) moves.push({r: nr, c: nc});
-                        }
-                    });
-                }
-            }
-            else if (piece.type === 'Y') {
-                const yMoves = [[2,2], [2,-2], [-2,2], [-2,-2]];
-                yMoves.forEach(([dr, dc]) => {
-                    let nr = r + dr, nc = c + dc;
-                    if (inBounds(nr, nc)) {
-                        const target = boardState[nr][nc];
-                        if (!target || target.team !== piece.team) moves.push({r: nr, c: nc});
-                    }
-                });
-            }
-            return moves;
-        }
-
-        function checkPregnancySystem() {
-            for (let r = 0; r < 6; r++) {
-                for (let c = 0; c < 4; c++) {
-                    const piece = boardState[r][c];
-                    if (piece && piece.type === 'F') {
-                        let adjacentToMale = false;
-                        const checkDirs = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
-                        
-                        for (let [dr, dc] of checkDirs) {
-                            let nr = r + dr, nc = c + dc;
-                            if (inBounds(nr, nc)) {
-                                const near = boardState[nr][nc];
-                                if (near && near.type === 'M' && near.team === piece.team) {
-                                    adjacentToMale = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (adjacentToMale && !piece.isPregnant) {
-                            piece.closeToMaleTurns++;
-                            if (piece.closeToMaleTurns > 2) {
-                                piece.isPregnant = true;
-                            }
-                        } else if (!adjacentToMale) {
-                            piece.closeToMaleTurns = 0;
-                        }
-                    }
-                }
-            }
-        }
-
-        function recordNotation(fromR, fromC, toR, toC, isCapture, evolutionStr) {
-            const piece = boardState[toR][toC];
-            const targetCell = `${rowLabels[toR]}${toC + 1}`;
-            const actionSign = isCapture ? 'x' : '';
-            let moveString = `${piece.type}${actionSign}${targetCell}${evolutionStr}`;
-
-            if (currentTurn === 'navy') {
-                const logLine = document.createElement('div');
-                logLine.id = `turn-${fullTurnCount}`;
-                logLine.innerText = `${fullTurnCount}. ${moveString}`;
-                logEl.appendChild(logLine);
-            } else {
-                const existingLine = document.getElementById(`turn-${fullTurnCount}`);
-                if (existingLine) {
-                    existingLine.innerText += `  /  ${fullTurnCount}.. ${moveString}`;
-                }
-                fullTurnCount++;
-            }
-            logEl.scrollTop = logEl.scrollHeight;
-        }
-
-        function renderBoard() {
-            boardEl.innerHTML = '';
-            for (let r = 0; r < 6; r++) {
-                for (let c = 0; c < 4; c++) {
-                    const square = document.createElement('div');
-                    square.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-                    
-                    if (selectedSquare && selectedSquare.row === r && selectedSquare.col === c) {
-                        square.classList.add('selected');
-                    }
-
-                    const isMovable = validMoves.some(m => m.r === r && m.c === c);
-                    if (isMovable) {
-                        if (boardState[r][c]) square.classList.add('attackable');
-                        else square.classList.add('movable');
-                    }
-
-                    const piece = boardState[r][c];
-                    if (piece) {
-                        const pieceEl = document.createElement('div');
-                        pieceEl.className = `piece team-${piece.team} ${piece.isMale ? 'male' : ''} ${piece.isPregnant ? 'pregnant' : ''}`;
-                        pieceEl.innerText = piece.type;
-                        square.appendChild(pieceEl);
-                    }
-
-                    square.addEventListener('click', () => handleSquareClick(r, c));
-                    boardEl.appendChild(square);
-                }
-            }
-        }
-
-        function handleSquareClick(r, c) {
-            const piece = boardState[r][c];
-            const isMovable = validMoves.some(m => m.r === r && m.c === c);
-
-            if (selectedSquare && isMovable) {
-                const fromR = selectedSquare.row;
-                const fromC = selectedSquare.col;
-                const fromPiece = boardState[fromR][fromC];
-                const isCapture = boardState[r][c] !== null;
-                let evolutionStr = '';
-
-                if (fromPiece.type === 'm' && (r === 0 || r === 5)) {
-                    fromPiece.dir *= -1;
-                }
-
-                fromPiece.ageTurns++;
-                boardState[r][c] = fromPiece;
-                boardState[fromR][fromC] = null;
-
-                if (fromPiece.type === 'm' && fromPiece.ageTurns >= 9) {
-                    boardState[r][c] = createPiece('P', fromPiece.team);
-                    evolutionStr = '=P';
-                }
-                else if (fromPiece.type === 'P' && fromPiece.ageTurns >= 7) {
-                    boardState[r][c] = createPiece('Y', fromPiece.team);
-                    evolutionStr = '=Y';
-                }
-
-                recordNotation(fromR, fromC, r, c, isCapture, evolutionStr);
-                checkPregnancySystem();
-
-                let stage = (fullTurnCount <= 5) ? '성장기' : '우화/번식기';
+        // 보드판 동적 생성
+        for (let r = 0; r < 6; r++) {
+            for (let c = 0; c < 6; c++) {
+                const square = document.createElement('div');
                 
-                selectedSquare = null;
-                validMoves = [];
-                currentTurn = currentTurn === 'navy' ? 'blue' : 'navy';
-                statusEl.innerText = `${currentTurn === 'navy' ? '람(Navy)' : '청(Blue)'}의 차례입니다 (${stage})`;
-                renderBoard();
-            } 
-            else if (piece && piece.team === currentTurn) {
-                selectedSquare = { row: r, col: c };
-                validMoves = getValidMoves(r, c);
-                renderBoard();
-            } 
-            else {
-                selectedSquare = null;
-                validMoves = [];
-                renderBoard();
+                // 흰 칸(연한 청색)과 검은 칸(남색) 교차 배치
+                const isLight = (r + c) % 2 === 0;
+                square.className = `square ${isLight ? 'light' : 'dark'}`;
+                square.dataset.coord = `${ranks[r]}${c + 1}`;
+
+                // 이미지 예시 배치를 위한 데이터 매핑 변환 (양 끝 2칸씩 기물 배치 시각화)
+                let pieceData = null;
+                if (initialBoard[r]) {
+                    if (c === 0) pieceData = initialBoard[r][0];
+                    else if (c === 1) pieceData = initialBoard[r][1];
+                    else if (c === 4) pieceData = initialBoard[r][2];
+                    else if (c === 5) pieceData = initialBoard[r][3];
+                }
+
+                // 기물이 존재할 경우 HTML 추가
+                if (pieceData) {
+                    const pieceSquare = document.createElement('div');
+                    pieceSquare.className = `piece team-${pieceData.team}`;
+                    
+                    // 기물 종류에 따른 임시 유니코드 문자 매핑 (이후 이미지로 교체 가능)
+                    if (pieceData.type === 'M' && !pieceData.special) {
+                        pieceSquare.innerText = '♟'; // 구더기(폰 모양)
+                    } else if (pieceData.type === 'F') {
+                        pieceSquare.innerText = '♝'; // 암컷/수컷(비숍 모양)
+                        if (pieceData.special) {
+                            pieceSquare.classList.add('male-mark'); // 수컷 구분 문양 추가
+                        }
+                    }
+                    
+                    square.appendChild(pieceSquare);
+                }
+
+                boardElement.appendChild(square);
             }
         }
-
-        document.getElementById('pass-btn').addEventListener('click', () => {
-            const logLine = document.createElement('div');
-            logLine.style.color = '#ffeb3b';
-            if (currentTurn === 'navy') {
-                logLine.innerText = `${fullTurnCount}. [람 패스]`;
-                logEl.appendChild(logLine);
-                currentTurn = 'blue';
-            } else {
-                const existingLine = document.getElementById(`turn-${fullTurnCount}`);
-                if (existingLine) existingLine.innerText += `  /  ${fullTurnCount}.. [청 패스]`;
-                else {
-                    logLine.innerText = `${fullTurnCount}.. [청 패스]`;
-                    logEl.appendChild(logLine);
-                }
-                fullTurnCount++;
-            }
-            statusEl.innerText = `${currentTurn === 'navy' ? '람(Navy)' : '청(Blue)'}의 차례입니다`;
-            selectedSquare = null;
-            validMoves = [];
-            renderBoard();
-        });
-
-        renderBoard();
     </script>
 </body>
 </html>
