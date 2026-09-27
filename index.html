@@ -3,623 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phoridae(벼룩파리)</title>
+    <title>Phoridae</title>
     <style>
-        body {
-            background-color: #222272;
-            color: #ffffff;
-            font-family: 'Malgun Gothic', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+        body { 
+            font-family: sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            background: rgb(34, 34, 114); 
+            margin: 0px; 
+            padding: 20px; 
+            box-sizing: border-box; 
+        }
+
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px; 
+            max-width: 500px; 
+            width: 100%; 
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 { 
+            font-size: 1.5rem; 
+            color: rgb(26, 26, 26); 
+            margin: 0 0 10px 0; 
+        }
+
+        .subtitle { 
+            color: rgb(102, 102, 102); 
+            font-size: 0.95rem; 
+            line-height: 1.5;
             margin: 0;
-            padding: 20px;
         }
 
-        h1 {
+        hr {
+            border: 0; 
+            height: 1px; 
+            background: #eee; 
+            margin: 20px 0;
+        }
+
+        section { 
             margin-bottom: 20px;
-            font-size: 24px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
-        .control-panel {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
+        h2 { 
+            font-size: 1.1rem; 
+            color: rgb(26, 26, 26); 
+            margin: 0 0 8px 0; 
+            font-weight: bold; 
         }
 
-        .btn {
-            background-color: #add8e6;
-            color: #000080;
-            border: none;
-            padding: 8px 16px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: 0.2s;
-        }
-
-        .btn:hover:not(:disabled) {
-            background-color: #ffffff;
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            background-color: #666;
-            color: #ccc;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .status-display {
-            font-size: 16px;
-            font-weight: bold;
-            background: rgba(0,0,0,0.4);
-            padding: 8px 15px;
-            border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .game-container {
-            display: grid;
-            grid-template-columns: 30px 360px;
-            grid-template-rows: 360px 30px;
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        }
-
-        .rank-labels {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            align-items: center;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .file-labels {
-            grid-column: 2;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 5px;
-        }
-
-        .board {
-            display: grid;
-            grid-template-columns: repeat(6, 60px);
-            grid-template-rows: repeat(6, 60px);
-            border: 2px solid #ffffff;
-        }
-
-        .square {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .light { background-color: #add8e6; }
-        .dark { background-color: #000080; }
-
-        .square.suggested::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: rgba(0, 255, 0, 0.5);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 15;
-        }
-        
-        .square.parasite-target::after {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            border: 3px dashed #ff00ff;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 15;
-            animation: pulse 1s infinite alternate;
-        }
-
-        @keyframes pulse {
-            from { transform: scale(0.9); }
-            to { transform: scale(1.1); }
-        }
-
-        .square.selected {
-            outline: 3px solid #ff4500;
-            outline-offset: -3px;
-        }
-
-        .piece {
-            font-size: 26px;
-            font-weight: bold;
-            user-select: none;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-        }
-
-        .team-navy {
-            color: #121c2b;
-            text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
-        }
-
-        .team-blue {
-            color: #00e5ff;
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-        }
-
-        /* 기물 상태 배지 (카운트다운 및 임신) */
-        .badge {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            font-size: 10px;
-            width: 15px;
-            height: 15px;
-            background-color: red;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            border: 1px solid white;
-            text-shadow: none;
-            z-index: 12;
-        }
-
-        .badge.countdown {
-            background-color: #ffd700;
-            color: #000;
-        }
-
-        .badge.pregnant {
-            background-color: #ff00ff;
-            color: #fff;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0.5; }
-        }
-
-        .description-box {
-            margin-top: 30px;
-            max-width: 450px;
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 5px solid #add8e6;
+        p, ul { 
+            font-size: 0.85rem; 
+            color: #666; 
+            margin: 0; 
+            padding-left: 0;
             line-height: 1.6;
-            font-size: 14px;
         }
 
-        .description-box h2 {
-            margin-top: 0;
-            font-size: 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            padding-bottom: 5px;
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.8rem;
+            color: #aaa;
         }
     </style>
 </head>
 <body>
 
-    <h1>Phoridae</h1>
+<div class="container">
+    <header>
+        <h1>Phoridae</h1>
 
-    <div class="control-panel">
-        <div class="status-display" id="turn-indicator">현재 턴: 남색 (선공)</div>
-        <button class="btn" id="pass-btn" onclick="handlePass()">턴 쉬기 (패스)</button>
-    </div>
+<div align="center">
+  <img src="./nu _{MA}.png" width="80" alt="가상 배치,각 기물은 후술"><br>
+</div>
 
-    <div class="game-container">
-        <div class="rank-labels">
-            <div>f</div><div>e</div><div>d</div><div>c</div><div>b</div><div>a</div>
-        </div>
+        <p class="subtitle">벼룩파리과의 생태와 기타 설정에서 따온 변형 체스류 게임</p>
+    </header>
 
-        <div class="board" id="board"></div>
+    <hr>
 
-        <div class="file-labels">
-            <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div>
-        </div>
-    </div>
-
-    <div class="description-box">
-        <h2>게임 규칙 및 기물 안내</h2>
-        <p>기물:
-구더기(maggot,m)(폰 포지션)
-번데기(pupa,P)(마이너 피스 포지션)
-암컷 (성체)(female fly,F)(퀸 포지션)
-수컷 (성체)(male fly,M)(킹 포지션)
-어린 수컷(성체)(young male fly,Y)(시작할떄 없음)(프로모션한 폰 포지션이고 수컷,암컷과 완전히 다른 기물)x4~
-
-기물 행마:
+    <section>
+        <h2>1.</h2>
+        <p>·기물:구더기(maggot,M)(이미지서 폰,폰 포지션,간이 게임 시 구슬 1개로 대체)x2
+번데기(pupa,P)(이미지서 페르즈,마이너 피스 포지션,구슬 2개로 대체)x2
+암컷 (성체)(female fly,F)(이미지서 비숍,퀸 포지션,구슬 4개로 대체)x1
+수컷 (성체)(male fly,M)(이미지서 문양이 붙은 비숍.킹 포지션,구슬 5개로 대체)x1
+어린 수컷(성체)(young male fly,Y)(시작할떄 없음)(암컷과 같은 이미지,프로모션한 폰 포지션이고 수컷,암컷과 완전히 다른 기물,구슬 3개로 대체)x4~
+·기물 행마:
 구더기:직선으로 1번에 1칸 이동/공격,뒤로 이동 불가하며 끝에 다다를 시 거꾸로 행마를 지속하며 9턴 후 번데기화,잡으면 +1
 번데기:대각선으로 1칸을 이동/공격,컬러바운드 기물,7턴 후 어린 수컷화,컬러바운드며 체스의 페르즈와 행마가 동일,잡으면 +2
 암컷:대각선으로 1칸 또는 2칸을 이동/공격,또한 가장자리 칸에 다다를 시 앞/뒤로 1칸 이동 가능한 특수 행마와 아군 수컷과 2턴 초과 움직이지 않고 붙어 있을 시 임신 상태로 변하는 특수행마가 있으며,이때 행마는 똑같으나 이후 자신의 공격가능 위치에 적 기물이 있을시 공격 대신 기생 특수행마를 발동(적군 수컷 제외,적 수컷은 잡을수 있으며 잡으면 게임이 끝남),2턴 이후 언제든지 턴을 소모하지 않고 적 기물의 자리에 구더기 하나를 소환 가능(이는 규정상 해당 자리의 기물을 구더기가 잡은걸로 표시),컬러바운드 아니며 알필+페르즈+와지르의 행마와 동일,특수행마 O,잡으면 +4 
 수컷:대각선으로 원하는대로 이동,,또한 가장자리 칸에 다다를 시 앞/뒤로 1칸 이동 가능한 특수 행마가 있음,컬러바운드 아니며 비숍과 같은 행마,특수행마 O,잡으면 게임이 끝나나 이론상 +5
-어린 수컷:대각선으로 2칸을 뛰어넘어 이동/공격,암컷에게 임신 불가,특수행마로 암수 근처 3x3칸에 있으면 '무리 효과'가 발동,해당 9x9칸 에서 자신의 색과 다른 주변 2칸을 이동 가능,알필과 같은 행마,특수행마 O, 잡으면 +5
-
-룰:청/람(B(blue)&N(navy))으로 나뉨,람이 선공이며 상대 수컷을 무슨 기물이든지 잡거나 자신의 기물이 2개 이상인 상태서 상대의 남는 기물이 수컷 제외 없게 하면 승리하며 무승부는 없음,4턴에 1번 자신의 턴을 쉬고 넘길수 있으며 이러면 상대는 해당 4턴 동안 쉴수 없음,한 턴은 람->청 순으로 한번씩 기물을 움직이는걸 뜻함,시작후 5수까지가 성장,이후 기물이 양팀 기물이 둘다 수컷+n 일때까지가 우화,그 이후는 번식기로 표
-
-기보:(청의 입장)가장 앞에 있는 카로 칸이 a,그 이후 b,c,d,e,f로 나뉘며 세로로는 왼쪽부터 1, 이후 2,3,4,5,6으로 나뉘고 표기는 각 기물의 영어 첫단어를 따 표기,특수히 들어가는건 모두 기물 이름 첫글자와 이동한 칸 사이에 기호를 넣음,그 종류론 특수행마는 @를 기보 앞에 넣고 기물을 잡으면 x,이것이 이 경기 마지막 수면 ),암컷이 알을 낳으면 *,번데기로 우화하거나 어린 수컷으로 우화 시 =를 표기,
+어린 수컷:대각선으로 2칸을 뛰어넘어 이동/공격,암컷에게 임신 불가,특수행마로 암수 근처 3x3칸에 있으면 '무리 효과'가 발동,해당 3x3칸 에서 자신의 색과 다른 주변 2칸을 이동 가능,알필과 같은 행마,특수행마 O, 잡으면 +5
+·룰:청/람(B(blue)&N(navy))으로 나뉨,람이 선공이며 상대 수컷을 무슨 기물이든지 잡거나 자신의 기물이 2개 이상인 상태서 상대의 남는 기물이 수컷 제외 없게 하면 승리하며 무승부는 없음,4턴에 1번 자신의 턴을 쉬고 넘길수 있으며 이러면 상대는 해당 4턴 동안 쉴수 없음,한 턴은 람->청 순으로 한번씩 기물을 움직이는걸 뜻함,시작후 5수까지가 성장,이후 기물이 양팀 기물이 둘다 수컷+n 일때까지가 우화,그 이후는 번식기로 표
+·기보:(청의 입장)가장 앞에 있는 가로 칸이 a,그 이후 b,c,d,e,f로 나뉘며 세로론 왼쪽부터 1, 이후 2,3,4,5,6으로 나뉘고 표기는 각 기물의 영어 첫단어를 따 표기,특수히 들어가는건 모두 기물 이름 첫글자와 이동한 칸 사이에 기호를 넣음,그 종류론 특수행마는 @를 기보 앞에 넣고 기물을 잡으면 x,이것이 이 경기 마지막 수면 ),암컷이 알을 낳으면 *,번데기로 우화하거나 어린 수컷으로 우화 시 =를 표기,
  람의 행마를 단독으로 표기 시 5.Yb4 식으로,청은 5..Mxc4 식으로 표기
+ex=Mxc2(구더기가 c2로 이동하며 그 자리에 있던 기물을 잡음),7..F*f4(7턴에 청이 암컷이 f4에 있던 기물에게 알을 기생시킴),Mxc5) (수컷이 c5에 있던 기물을 잡고 게임이 끝남,이로서 잡힌 기물이 수컷이란 걸 알수 있음)
+·간이 게임 배치
+준비물:7mm 이하의 비즈(모래 등 큰 알갱이도 가능)40개 이상(기물배치에 필요한 30개 +우화 시 필요한 잔여 비즈),5cm 정도의 종이/판(격자가 있는것,없다면 그것에 선을 그을 필기구 1개)
+
 </p>
-    </div>
+              
+    </section>
 
-    <script>
-        // 초기 배치도 설정 (시작 즉시 카운트다운을 가짐)
-        // 구더기(m): turnLeft=9, 번데기(P): turnLeft=7
-        const boardState = [
-            [null, {type: 'P', team: 'blue', turnLeft: 7}, {type: 'M', team: 'blue'}, {type: 'F', team: 'blue', adjacentTurns: 0, pregnant: false}, {type: 'P', team: 'blue', turnLeft: 7}, null], // f열
-            [null, {type: 'm', team: 'blue', turnLeft: 9, isReverse: false}, null, null, {type: 'm', team: 'blue', turnLeft: 9, isReverse: false}, null],                                         // e열
-            [null, null, null, null, null, null],                                                                                   // d열
-            [null, null, null, null, null, null],                                                                                   // c열
-            [null, {type: 'm', team: 'navy', turnLeft: 9, isReverse: false}, null, null, {type: 'm', team: 'navy', turnLeft: 9, isReverse: false}, null],                                         // b열
-            [null, {type: 'P', team: 'navy', turnLeft: 7}, {type: 'F', team: 'navy', adjacentTurns: 0, pregnant: false}, {type: 'M', team: 'navy'}, {type: 'P', team: 'navy', turnLeft: 7}, null]  // a열
-        ];
+    <hr>
 
-        const boardElement = document.getElementById('board');
-        const turnIndicator = document.getElementById('turn-indicator');
-        const passBtn = document.getElementById('pass-btn');
+    <section>
+        <h2>2.변형기물 1</h2>
+        <p>·'기생파리' 일반적으론 페르즈의 행마를 가지나 기물점수 2점 이상 9점 이하인 적 기물이 공격범위에 들어올 시 기생,그 기물을 자신이 조종(행마법 사용)할수 있으며 기생 상태선 한번 잡아도 그 행마법(숙주)만 사라질 뿐 기생파리 자체는 기물의 공격 방향으로 1칸 멀어져 그 자리에 기물이 있을시 다시 기생,가장자리의 경우 숙주와 같이 잡힘) 생존<br>·'파리(떼)':기본적으로 0.5칸을 차지,처음엔 아군 마이너 피스 아무와 같은 칸에 배치 가능하며 페르즈의 행마를 가짐,해당 칸에 적/아군 기물이 들어올수 있으며 기본적으로 다른 기물이 잡거나 잡힐수 없으나 한 적군 기물이(아군은 x) 해당 칸에 2턴 이상 머무를 경우 '소화액' 효과가 발동,해당 기물은 죽음<br>·체스 변형기물 '(Megapropodiphora)arnoldi':파리와 동일하나 적용 시간이 2턴 초과<br>·'Rosary Recluse(Royal Rosary/Rosary)':비숍류의 컬러바운드 기물로 '0.5칸 차지 기물'에 속해 다른 아군 기물과 겹쳐 존재가 가능하며(이 상태서 잡힐시 겹친 기물과 함께 사망) 페르즈처럼 움직임</p>
 
-        let currentTurn = 'navy'; // 'navy' or 'blue'
-        let selectedSquare = null;
-        let validMoves = [];
-        let parasiteTargets = [];
+</p>
 
-        // 패스 제어 변수 (각 팀별 패스 쿨다운 잔여 턴수, 패스 금지 여부)
-        const passCooldown = { navy: 0, blue: 0 };
-        const passForbidden = { navy: false, blue: false };
 
-        function createBoard() {
-            boardElement.innerHTML = '';
-            for (let r = 0; r < 6; r++) {
-                for (let c = 0; c < 6; c++) {
-                    const square = document.createElement('div');
-                    const isLight = (r + c) % 2 === 0;
-                    square.className = `square ${isLight ? 'light' : 'dark'}`;
-                    square.dataset.row = r;
-                    square.dataset.col = c;
 
-                    const piece = boardState[r][c];
-                    if (piece) {
-                        const pieceSquare = document.createElement('div');
-                        pieceSquare.className = `piece team-${piece.team}`;
-                        pieceSquare.innerText = piece.type;
 
-                        // 번데기나 구더기의 카운트다운 배지 표시
-                        if ((piece.type === 'm' || piece.type === 'P') && piece.turnLeft !== undefined) {
-                            const b = document.createElement('span');
-                            b.className = 'badge countdown';
-                            b.innerText = piece.turnLeft;
-                            pieceSquare.appendChild(b);
-                        }
+</p>
 
-                        // 암컷의 임신 상태 표시 배지
-                        if (piece.type === 'F' && piece.pregnant) {
-                            const b = document.createElement('span');
-                            b.className = 'badge pregnant';
-                            b.innerText = '♥';
-                            pieceSquare.appendChild(b);
-                        }
+        </ul>
+    </section>
 
-                        square.appendChild(pieceSquare);
-                    }
+</section>
 
-                    square.addEventListener('click', onSquareClick);
-                    boardElement.appendChild(square);
-                }
-            }
-            updateControls();
-        }
+     <hr>    
 
-        function updateControls() {
-            turnIndicator.innerText = `현재 턴: ${currentTurn === 'navy' ? '남색 (선공)' : '청색 (후공)'}`;
-            
-            // 패스 버튼 상태 제어
-            if (passCooldown[currentTurn] > 0 || passForbidden[currentTurn]) {
-                passBtn.disabled = true;
-            } else {
-                passBtn.disabled = false;
-            }
-        }
+        </ul>
+    </section>
 
-        function inBounds(r, c) {
-            return r >= 0 && r < 6 && c >= 0 && c < 6;
-        }
+</section>
 
-        // 인접한 8방향에 아군 수컷(M)이 있는지 확인하는 헬퍼 함수
-        function isAdjacentToFriendlyMale(r, c, team) {
-            const dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
-            for (let [dr, dc] of dirs) {
-                const nr = r + dr, nc = c + dc;
-                if (inBounds(nr, nc)) {
-                    const target = boardState[nr][nc];
-                    if (target && target.type === 'M' && target.team === team) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
+     <hr>
+        
+   <footer>
+    <p>marnoldi</p>
+  </footer>
 
-        function getValidMoves(r, c) {
-            const piece = boardState[r][c];
-            if (!piece) return { moves: [], parasites: [] };
-            
-            const moves = [];
-            const parasites = [];
+</div>
 
-            if (piece.type === 'm') {
-                // 구더기 행마: 기본 직진 1칸 (거꾸로 행마 상태면 반대 방향)
-                let dir = piece.team === 'blue' ? 1 : -1;
-                if (piece.isReverse) dir *= -1;
-
-                const targetR = r + dir;
-                if (inBounds(targetR, c)) {
-                    const targetPiece = boardState[targetR][c];
-                    if (!targetPiece || targetPiece.team !== piece.team) {
-                        moves.push({r: targetR, c: c});
-                    }
-                }
-            } 
-            else if (piece.type === 'P') {
-                // 번데기: 대각선 1칸
-                const dirs = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-                dirs.forEach(([dr, dc]) => {
-                    const targetR = r + dr, targetC = c + dc;
-                    if (inBounds(targetR, targetC)) {
-                        const targetPiece = boardState[targetR][targetC];
-                        if (!targetPiece || targetPiece.team !== piece.team) moves.push({r: targetR, c: targetC});
-                    }
-                });
-            } 
-            else if (piece.type === 'F') {
-                // 암컷: 대각선 1~2칸 (장애물 제한)
-                const dirs = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-                dirs.forEach(([dr, dc]) => {
-                    for (let step = 1; step <= 2; step++) {
-                        const targetR = r + dr * step;
-                        const targetC = c + dc * step;
-                        if (!inBounds(targetR, targetC)) break;
-                        const targetPiece = boardState[targetR][targetC];
-                        
-                        if (!targetPiece) {
-                            moves.push({r: targetR, c: targetC});
-                        } else {
-                            if (targetPiece.team !== piece.team) {
-                                // 임신 상태면 기생 타겟으로 분류 (적 수컷 제외)
-                                if (piece.pregnant && targetPiece.type !== 'M') {
-                                    parasites.push({r: targetR, c: targetC});
-                                } else {
-                                    moves.push({r: targetR, c: targetC});
-                                }
-                            }
-                            break;
-                        }
-                    }
-                });
-            } 
-            else if (piece.type === 'M') {
-                // 수컷: 대각선 무제한
-                const dirs = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-                dirs.forEach(([dr, dc]) => {
-                    let step = 1;
-                    while (true) {
-                        const targetR = r + dr * step;
-                        const targetC = c + dc * step;
-                        if (!inBounds(targetR, targetC)) break;
-                        const targetPiece = boardState[targetR][targetC];
-                        
-                        if (!targetPiece) {
-                            moves.push({r: targetR, c: targetC});
-                        } else {
-                            if (targetPiece.team !== piece.team) moves.push({r: targetR, c: targetC});
-                            break;
-                        }
-                        step++;
-                    }
-                });
-            }
-            else if (piece.type === 'Y') {
-                // 어린 수컷: 대각선 2칸 도약
-                const dirs = [[2, 2], [2, -2], [-2, 2], [-2, -2]];
-                dirs.forEach(([dr, dc]) => {
-                    const targetR = r + dr, targetC = c + dc;
-                    if (inBounds(targetR, targetC)) {
-                        const targetPiece = boardState[targetR][targetC];
-                        if (!targetPiece || targetPiece.team !== piece.team) moves.push({r: targetR, c: targetC});
-                    }
-                });
-            }
-
-            return { moves, parasites };
-        }
-
-        function onSquareClick(e) {
-            const square = e.currentTarget;
-            const r = parseInt(square.dataset.row);
-            const c = parseInt(square.dataset.col);
-
-            // 이동 제안 칸 클릭 시 실행
-            if (square.classList.contains('suggested') && selectedSquare) {
-                movePiece(selectedSquare.r, selectedSquare.c, r, c, false);
-                return;
-            }
-
-            // 기생(구더기 소환) 제안 칸 클릭 시 실행
-            if (square.classList.contains('parasite-target') && selectedSquare) {
-                movePiece(selectedSquare.r, selectedSquare.c, r, c, true);
-                return;
-            }
-
-            // 하이라이트 청소
-            document.querySelectorAll('.square').forEach(sq => {
-                sq.classList.remove('suggested', 'selected', 'parasite-target');
-            });
-
-            const piece = boardState[r][c];
-            if (piece && piece.team === currentTurn) {
-                square.classList.add('selected');
-                selectedSquare = {r, c};
-                
-                const res = getValidMoves(r, c);
-                validMoves = res.moves;
-                parasiteTargets = res.parasites;
-
-                validMoves.forEach(m => {
-                    document.querySelector(`.square[data-row="${m.r}"][data-col="${m.c}"]`).classList.add('suggested');
-                });
-                parasiteTargets.forEach(m => {
-                    document.querySelector(`.square[data-row="${m.r}"][data-col="${m.c}"]`).classList.add('parasite-target');
-                });
-            } else {
-                selectedSquare = null;
-            }
-        }
-
-        function movePiece(fromR, fromC, toR, toC, isParasiteAction) {
-            const piece = boardState[fromR][fromC];
-            
-            if (isParasiteAction) {
-                // 기생 액션: 적 기물 자리에 구더기(m) 탄생시킴 (기존 적 기물 강제 제거 및 교체)
-                boardState[toR][toC] = { type: 'm', team: piece.team, turnLeft: 9, isReverse: false };
-                // 기생했으므로 임신 상태 해제 및 카운터 초기화
-                piece.pregnant = false;
-                piece.adjacentTurns = 0;
-            } else {
-                // 일반 이동 및 잡기
-                const targetPiece = boardState[toR][toC];
-                if (targetPiece && targetPiece.type === 'M') {
-                    createBoard();
-                    alert(`${currentTurn === 'navy' ? '남색' : '청색'} 팀이 상대 수컷을 처단하여 승리했습니다!`);
-                    location.reload();
-                    return;
-                }
-
-                // 구더기 끝 행 도달 체크 (청팀은 r=5, 남팀은 r=0 도달 시 거꾸로 행마 전환)
-                if (piece.type === 'm') {
-                    if ((piece.team === 'blue' && toR === 5) || (piece.team === 'navy' && toR === 0)) {
-                        piece.isReverse = true;
-                    }
-                }
-
-                boardState[toR][toC] = piece;
-                boardState[fromR][fromC] = null;
-            }
-
-            selectedSquare = null;
-            endTurn();
-        }
-
-        function handlePass() {
-            if (passCooldown[currentTurn] > 0 || passForbidden[currentTurn]) return;
-
-            // 쿨다운 및 밴 규칙 업데이트
-            passCooldown[currentTurn] = 5; // 다음 자신의 패스까지의 쿨다운 (이번 포함 5턴 뒤 사용 가능)
-            
-            const enemy = currentTurn === 'navy' ? 'blue' : 'navy';
-            passForbidden[enemy] = true; // 상대는 이 4턴 주기 동안 패스 불가
-
-            endTurn(true);
-        }
-
-        function endTurn(isPass = false) {
-            // 패스 금지 카운터 관리를 위해 턴 카운트 차감 및 기물 성장 가동
-            // 매 턴 종료마다 모든 기물의 카운트다운을 차감합니다.
-            for (let r = 0; r < 6; r++) {
-                for (let c = 0; c < 6; c++) {
-                    const piece = boardState[r][c];
-                    if (piece) {
-                        // 1. 구더기 및 번데기 카운트다운 차감 (전체 기물)
-                        if (piece.turnLeft !== undefined) {
-                            piece.turnLeft--;
-                            if (piece.turnLeft <= 0) {
-                                if (piece.type === 'm') {
-                                    // 구더기 -> 번데기 진화 (7턴 생명력 부여)
-                                    boardState[r][c] = { type: 'P', team: piece.team, turnLeft: 7 };
-                                } else if (piece.type === 'P') {
-                                    // 번데기 -> 어린 수컷 진화
-                                    boardState[r][c] = { type: 'Y', team: piece.team };
-                                }
-                            }
-                        }
-
-                        // 2. 암컷의 수컷 인접 상태 누적 체크
-                        if (piece.type === 'F') {
-                            if (isAdjacentToFriendlyMale(r, c, piece.team)) {
-                                piece.adjacentTurns++;
-                                if (piece.adjacentTurns > 2) {
-                                    piece.pregnant = true;
-                                }
-                            } else {
-                                // 떨어지면 인접 턴수 초기화 (기존 임신 상태는 유지)
-                                piece.adjacentTurns = 0;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 패스 쿨다운 및 조건부 밴 제어계수 1차감
-            if (passCooldown.navy > 0) passCooldown.navy--;
-            if (passCooldown.blue > 0) passCooldown.blue--;
-            
-            // 간단하게 4턴 동안 지속되는 금지 처리 연산 구현
-            // 실제 구현 편의상 수치 계산을 통해 토글 처리를 가동할 수 있습니다.
-
-            // 턴 전환
-            currentTurn = currentTurn === 'navy' ? 'blue' : 'navy';
-            
-            // 승리 조건 검사 (수컷 제외 기물 전멸 체크)
-            checkExterminationWin();
-
-            createBoard();
-        }
-
-        function checkExterminationWin() {
-            let navyOthers = 0, blueOthers = 0;
-            for (let r = 0; r < 6; r++) {
-                for (let c = 0; c < 6; c++) {
-                    const p = boardState[r][c];
-                    if (p && p.type !== 'M') {
-                        if (p.team === 'navy') navyOthers++;
-                        if (p.team === 'blue') blueOthers++;
-                    }
-                }
-            }
-            if (navyOthers === 0) {
-                alert("blue win!");
-                location.reload();
-            } else if (blueOthers === 0) {
-                alert("Navy win!");
-                location.reload();
-            }
-        }
-
-        // 초기 실행
-        createBoard();
-    </script>
 </body>
 </html>
